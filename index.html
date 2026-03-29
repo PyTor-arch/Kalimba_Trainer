@@ -835,8 +835,7 @@
       const MAX_FREQ = 870;     // highest detectable frequency (Hz)
       const YIN_THRESHOLD = 0.18;    // YIN CMND threshold (was 0.15, 0.18 is very tolerant of noise)
       const IS_LOW_END = (navigator.hardwareConcurrency || 4) <= 2;
-      const FFT_SIZE = IS_LOW_END ? 2048 : 4096;
-
+      const FFT_SIZE = (IS_LOW_END || /iPhone|iPad|iPod/.test(navigator.userAgent)) ? 2048 : 4096;
       // ─── 17 Kalimba tines: E3 → G5 (ascending left→right) ──────────────────
       const TINES = [
         { n: 'E3', f: 164.81 }, { n: 'F3', f: 174.61 }, { n: 'G3', f: 196.00 }, { n: 'A3', f: 220.00 },
@@ -901,13 +900,17 @@
         ctx: null,
         analyser: null,
         stream: null,
-        micSource: null,   // VERY IMPORTANT: MUST globally anchor these nodes
-        dummyNode: null,   // otherwise Safari's AGC destroys them mid-session
+        micSource: null,
+        dummyNode: null,
         isBlocked: false,
+        _persistentBuf: null,
 
         async init() {
+          if (this.ctx) return; // avoid double init
           const AC = window.AudioContext || window.webkitAudioContext;
           this.ctx = new AC();
+          
+          // Force resume from user interaction
           if (this.ctx.state === 'suspended') await this.ctx.resume();
 
           this.stream = await navigator.mediaDevices.getUserMedia({
@@ -920,13 +923,10 @@
             video: false,
           });
 
-          // iOS Safari Fix 1: The microphone permission dialog pauses the entire Web Audio API. 
-          // We MUST resume it again after the user clicks "Allow".
-          if (this.ctx.state === 'suspended') {
-            await this.ctx.resume();
-          }
+          // Resume again because getUserMedia permission dialog suspends the context on iOS
+          await this.ctx.resume();
 
-          // iOS Safari Fix 2: "Unlock" the Web Audio engine by playing a tiny, silent sound.
+          // Unlock engine with a silent sound
           const unlockOsc = this.ctx.createOscillator();
           const unlockGain = this.ctx.createGain();
           unlockGain.gain.value = 0;
@@ -938,27 +938,36 @@
           this.micSource = this.ctx.createMediaStreamSource(this.stream);
           this.analyser = this.ctx.createAnalyser();
           this.analyser.fftSize = FFT_SIZE;
-          this.analyser.smoothingTimeConstant = 0; // raw samples for YIN
+          this.analyser.smoothingTimeConstant = 0;
           this.micSource.connect(this.analyser);
           
-          // iOS Safari Fix 3: If the audio graph doesn't reach the destination,
-          // iOS aggressively suspends the microphone to save battery.
-          // A silent GainNode forces the audio engine to keep processing.
+          // KEEP ALIVE: A tiny constant signal to the destination prevents Safari 17 from 
+          // aggressively suspending the microphone to save power.
           this.dummyNode = this.ctx.createGain();
-          this.dummyNode.gain.value = 0;
+          this.dummyNode.gain.value = 0.0001; // tiny but non-zero
           this.analyser.connect(this.dummyNode);
           this.dummyNode.connect(this.ctx.destination);
+
+          this._persistentBuf = new Float32Array(this.analyser.fftSize);
+
+          // Watch for interruptions
+          this.ctx.onstatechange = () => {
+            if (this.ctx.state !== 'running') this.resume();
+          };
         },
 
         buf() {
-          const b = new Float32Array(this.analyser.fftSize);
-          this.analyser.getFloatTimeDomainData(b);
-          return b;
+          if (!this.analyser || !this._persistentBuf) return new Float32Array(FFT_SIZE);
+          this.analyser.getFloatTimeDomainData(this._persistentBuf);
+          return this._persistentBuf;
         },
 
         // Marimba-like feedback tone: fundamental + 2nd harmonic, exponential decay
         playTone(freq, onDone) {
-          if (!this.ctx) return;
+          if (!this.ctx || this.ctx.state !== 'running') {
+            if (onDone) onDone();
+            return;
+          }
           this.isBlocked = true;
           const t = this.ctx.currentTime;
           const o1 = this.ctx.createOscillator();
@@ -1116,6 +1125,7 @@
           const peaks = [];
           return new Promise(resolve => {
             const tick = () => {
+              AE.resume();
               const raw = AE.buf();
               const N = raw.length;
               let s = 0;
@@ -1127,7 +1137,7 @@
               if (performance.now() - start < durationMs) {
                 requestAnimationFrame(tick);
               } else {
-                this.noiseFloor = Math.max(0.006, Math.max(...peaks) * 2.5);
+                this.noiseFloor = Math.max(0.006, Math.max(...peaks) * 1.8);
                 resolve();
               }
             };
@@ -1182,7 +1192,7 @@
           const freqs = e.c ? [{ n: e.n, f: e.f }, { n: e.c, f: e.cf }] : [{ n: e.n, f: e.f }];
           for (const t of freqs) {
             const isCalibrated = (MC.calibrated[t.n] !== undefined);
-            const tol = isCalibrated ? 8 : FREQ_TOLERANCE; // strict 8Hz tolerance for calibrated tines
+            const tol = isCalibrated ? 12 : FREQ_TOLERANCE; // 12Hz tolerance for calibrated tines (was 8)
             if (Math.abs(freq - t.f) <= tol) {
               this.correctCount++;
               return 'correct';
@@ -1381,6 +1391,11 @@
 
           const tick = () => {
             this.raf = requestAnimationFrame(tick);
+            AE.resume();
+
+            this.frame = (this.frame || 0) + 1;
+            if (this.frame % 2 !== 0) return;
+
             // Reset echo suppressor briefly so each new press is detected
             PD.lastDetectedFreq = null;
             const raw = AE.buf();
@@ -1436,6 +1451,7 @@
         },
 
         start() {
+          AE.resume();
           this.tineIdx = 0;
           this.calibrated = {};
           this._buildSVG();
@@ -1445,6 +1461,7 @@
           UI._show('screen-manual-calib');
 
           document.getElementById('btn-mcalib-next').onclick = () => {
+            AE.resume();
             if (!this.currentDetectedHz) return;
             const target = TINES[this.tineIdx];
             this.calibrated[target.n] = this.currentDetectedHz;
@@ -1598,6 +1615,11 @@
             this._syncUI();
             this._startLoop();
           });
+
+          // Global iOS AudioContext wake-up: ANY interaction helps keep it alive
+          ['touchstart', 'mousedown'].forEach(evt => {
+            document.addEventListener(evt, () => AE.resume(), { passive: true });
+          });
         },
 
         _startLoop() {
@@ -1616,9 +1638,9 @@
             // Timestamp-based cooldown (replaces AE.isBlocked)
             if (Date.now() < this.cooldownUntil) return;
 
-            // On low-end devices: skip every other frame
+            // Limit to 30fps to avoid overheating/throttling on mobile
             this.frame++;
-            if (IS_LOW_END && (this.frame & 1)) return;
+            if (this.frame % 2 !== 0) return;
 
             const raw = AE.buf();
             const freq = PD.detect(raw, AE.ctx.sampleRate);
