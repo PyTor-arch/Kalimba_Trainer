@@ -7,8 +7,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Kalimba ✨ Saria's Song</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --lavender: #c8b8e8;
@@ -26,7 +24,7 @@
       --text: #4a3860;
       --text-light: #7a6890;
       --shadow: 0 4px 18px rgba(100, 80, 140, 0.15);
-      --font: 'Nunito', system-ui, -apple-system, sans-serif;
+      --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
       --radius: 12px;
     }
 
@@ -73,59 +71,106 @@
       pointer-events: auto;
     }
 
-    /* ── Welcome ────────────────────────────────────── */
+    /* ── Welcome (Zelda Theme) ──────────────────────── */
     #screen-welcome {
       justify-content: center;
-      gap: 20px;
-      padding: 28px 24px;
+      gap: 16px;
+      padding: 24px 20px;
       text-align: center;
+      background: linear-gradient(145deg, #1b2822 0%, #2c4230 40%, #16241b 100%);
     }
 
-    .navi-icon {
-      font-size: 3.5rem;
-      animation: float 3s ease-in-out infinite;
+    #screen-welcome::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center 35%, rgba(168, 216, 168, 0.25) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
     }
 
-    @keyframes float {
-
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-
-      50% {
-        transform: translateY(-10px);
-      }
-    }
-
-    .speech-bubble {
-      background: white;
-      border: 2px solid var(--lavender);
-      border-radius: var(--radius);
-      padding: 14px 18px;
-      box-shadow: var(--shadow);
-      max-width: 340px;
-      text-align: left;
-    }
-
-    .speech-bubble h1 {
-      font-size: 1.35rem;
-      font-weight: 800;
-      color: var(--lavender-dark);
+    .navi-img {
+      width: 140px;
+      height: auto;
+      z-index: 2;
+      animation: floatNavi 4s ease-in-out infinite;
+      filter: drop-shadow(0 0 20px rgba(220, 245, 255, 0.7));
       margin-bottom: 6px;
     }
 
-    .speech-bubble p {
-      font-size: 0.9rem;
-      color: var(--text-light);
+    @keyframes floatNavi {
+      0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 20px rgba(220, 245, 255, 0.7)); }
+      50% { transform: translateY(-12px) scale(1.03); filter: drop-shadow(0 0 35px rgba(220, 245, 255, 0.95)); }
+    }
+
+    .zelda-box {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 3px solid #e8c84a; /* var(--gold) */
+      border-radius: 18px;
+      padding: 16px 20px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), inset 0 0 15px rgba(255,255,255,0.8);
+      max-width: 350px;
+      text-align: left;
+      z-index: 2;
+      position: relative;
+    }
+
+    .zelda-box h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #2c4230;
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+
+    .zelda-box p {
+      font-size: 0.92rem;
+      color: #3b5240;
       line-height: 1.55;
+    }
+    
+    .zelda-box strong {
+      color: #1b2822; /* darker green */
+      font-weight: 800;
+    }
+
+    /* Override buttons for welcome screen only */
+    #screen-welcome .btn-primary,
+    #screen-welcome .btn-secondary,
+    #screen-welcome .mic-note {
+      position: relative;
+      z-index: 2;
+      margin-top: 4px;
+    }
+    
+    #screen-welcome .btn-primary {
+      background: #e8c84a;
+      color: #2c4230;
+      border: 2px solid #ceae33;
+      box-shadow: 0 6px 20px rgba(232, 200, 74, 0.35);
+    }
+    #screen-welcome .btn-primary:active {
+      transform: scale(0.96);
+      background: #d8b73b;
+    }
+    
+    #screen-welcome .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #e8c84a;
+      border: 2px solid #e8c84a;
+      backdrop-filter: blur(4px);
+    }
+    #screen-welcome .btn-secondary:active {
+      transform: scale(0.96);
+      background: rgba(232, 200, 74, 0.2);
     }
 
     .mic-note {
       font-size: 0.75rem;
-      color: var(--text-light);
+      color: rgba(255,255,255,0.7);
       max-width: 300px;
-      opacity: 0.8;
     }
 
     /* ── Buttons ────────────────────────────────────── */
@@ -617,14 +662,14 @@
 
   <!-- ══ Screen 1: Welcome ═══════════════════════════════ -->
   <div id="screen-welcome" class="screen active">
-    <div class="navi-icon">✨</div>
-    <div class="speech-bubble">
+    <img src="Navi.png" class="navi-img" alt="Navi">
+    <div class="speech-bubble zelda-box">
       <h1>Hey! Listen, Sina!</h1>
       <p>Ich bin Navi, deine Kalimba-Fee! 🧚<br>
         Lass uns zusammen <strong>Saria's Song</strong> lernen —<br>
         das schönste Lied aus den Wäldern von Hyrule.</p>
     </div>
-    <div class="speech-bubble">
+    <div class="speech-bubble zelda-box">
       <p>🎵 Die leuchtende Taste zeigt, welche Note du spielen sollst.<br>
         Spiel sie auf deiner Kalimba — ich höre zu!<br>
         Das Lied hat <strong>4 Teile</strong> und du sammelst dabei alle drei Triforce-Splitter. 💛</p>
