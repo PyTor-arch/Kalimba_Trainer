@@ -901,6 +901,8 @@
         ctx: null,
         analyser: null,
         stream: null,
+        micSource: null,   // VERY IMPORTANT: MUST globally anchor these nodes
+        dummyNode: null,   // otherwise Safari's AGC destroys them mid-session
         isBlocked: false,
 
         async init() {
@@ -933,19 +935,19 @@
           unlockOsc.start(this.ctx.currentTime);
           unlockOsc.stop(this.ctx.currentTime + 0.1);
 
-          const src = this.ctx.createMediaStreamSource(this.stream);
+          this.micSource = this.ctx.createMediaStreamSource(this.stream);
           this.analyser = this.ctx.createAnalyser();
           this.analyser.fftSize = FFT_SIZE;
           this.analyser.smoothingTimeConstant = 0; // raw samples for YIN
-          src.connect(this.analyser);
+          this.micSource.connect(this.analyser);
           
           // iOS Safari Fix 3: If the audio graph doesn't reach the destination,
           // iOS aggressively suspends the microphone to save battery.
           // A silent GainNode forces the audio engine to keep processing.
-          const dummy = this.ctx.createGain();
-          dummy.gain.value = 0;
-          this.analyser.connect(dummy);
-          dummy.connect(this.ctx.destination);
+          this.dummyNode = this.ctx.createGain();
+          this.dummyNode.gain.value = 0;
+          this.analyser.connect(this.dummyNode);
+          this.dummyNode.connect(this.ctx.destination);
         },
 
         buf() {
