@@ -90,10 +90,27 @@
     }
 
     #navi-wrap {
-      position: relative;
-      z-index: 3;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 10;
       cursor: pointer;
       will-change: transform;
+    }
+
+    .bg-triforce {
+      position: absolute;
+      width: 130vw;
+      max-width: 650px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      fill: rgba(232, 200, 74, 0.04);
+      stroke: rgba(232, 200, 74, 0.2);
+      stroke-width: 1.5;
+      z-index: 1;
+      pointer-events: none;
+      filter: drop-shadow(0 0 30px rgba(232, 200, 74, 0.1));
     }
 
     .navi-img {
@@ -669,6 +686,14 @@
 
   <!-- ══ Screen 1: Welcome ═══════════════════════════════ -->
   <div id="screen-welcome" class="screen active">
+    
+    <!-- Background Triforce -->
+    <svg class="bg-triforce" viewBox="0 0 100 86.6">
+      <polygon points="50,0 25,43.3 75,43.3" />
+      <polygon points="25,43.3 0,86.6 50,86.6" />
+      <polygon points="75,43.3 50,86.6 100,86.6" />
+    </svg>
+
     <div id="navi-wrap">
       <img src="Navi.png" class="navi-img" alt="Navi">
     </div>
@@ -1721,16 +1746,25 @@
       // ─── Navi Interaction ───
       const naviWrap = document.getElementById('navi-wrap');
       if (naviWrap) {
-        let nx = 0, ny = 0, tx = 0, ty = 0;
+        // Start roughly near the upper part of the screen
+        let nx = window.innerWidth / 2 - 70;
+        let ny = window.innerHeight * 0.2;
+        let tx = nx, ty = ny;
         let speed = 0.015;
         
-        // Gentle drift loop
+        naviWrap.style.transform = `translate(${nx}px, ${ny}px)`;
+
+        const pickRandomTarget = () => {
+          const marginX = 80;
+          const marginY = 80;
+          tx = marginX + Math.random() * Math.max(10, window.innerWidth - marginX * 2);
+          ty = marginY + Math.random() * Math.max(10, window.innerHeight - marginY * 2);
+        };
+
+        // Gentle drift loop across the screen
         setInterval(() => {
-          if (speed < 0.1) {
-            tx = (Math.random() - 0.5) * 80;
-            ty = (Math.random() - 0.5) * 40;
-          }
-        }, 2200);
+          if (speed < 0.1) pickRandomTarget();
+        }, 3500);
 
         const tickNavi = () => {
           nx += (tx - nx) * speed;
@@ -1744,10 +1778,8 @@
         // Click / tap to annoy Navi
         naviWrap.addEventListener('pointerdown', (e) => {
           e.preventDefault();
-          // Dart away wildly
-          const signX = Math.random() < 0.5 ? -1 : 1;
-          tx = signX * (80 + Math.random() * 80); 
-          ty = -60 - Math.random() * 80; // Usually darts upwards and away
+          // Dart away wildly to a new random spot on the screen
+          pickRandomTarget();
           speed = 0.35; // extremely fast dart
         });
       }
