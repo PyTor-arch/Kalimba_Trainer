@@ -89,6 +89,13 @@
       z-index: 0;
     }
 
+    #navi-wrap {
+      position: relative;
+      z-index: 3;
+      cursor: pointer;
+      will-change: transform;
+    }
+
     .navi-img {
       width: 140px;
       height: auto;
@@ -662,7 +669,9 @@
 
   <!-- ══ Screen 1: Welcome ═══════════════════════════════ -->
   <div id="screen-welcome" class="screen active">
-    <img src="Navi.png" class="navi-img" alt="Navi">
+    <div id="navi-wrap">
+      <img src="Navi.png" class="navi-img" alt="Navi">
+    </div>
     <div class="speech-bubble zelda-box">
       <h1>Hey! Listen, Sina!</h1>
       <p>Ich bin Navi, deine Kalimba-Fee! 🧚<br>
@@ -896,7 +905,14 @@
           this.analyser.fftSize = FFT_SIZE;
           this.analyser.smoothingTimeConstant = 0; // raw samples for YIN
           src.connect(this.analyser);
-          // Note: NOT connected to destination — silent monitoring
+          
+          // iOS Safari Fix: If the audio graph doesn't reach the destination,
+          // iOS aggressively suspends the microphone to save battery.
+          // A silent GainNode forces the audio engine to keep processing.
+          const dummy = this.ctx.createGain();
+          dummy.gain.value = 0;
+          this.analyser.connect(dummy);
+          dummy.connect(this.ctx.destination);
         },
 
         buf() {
@@ -1701,6 +1717,40 @@
 
       // ─── Boot ─────────────────────────────────────────────────────────────────
       UI.init();
+
+      // ─── Navi Interaction ───
+      const naviWrap = document.getElementById('navi-wrap');
+      if (naviWrap) {
+        let nx = 0, ny = 0, tx = 0, ty = 0;
+        let speed = 0.015;
+        
+        // Gentle drift loop
+        setInterval(() => {
+          if (speed < 0.1) {
+            tx = (Math.random() - 0.5) * 80;
+            ty = (Math.random() - 0.5) * 40;
+          }
+        }, 2200);
+
+        const tickNavi = () => {
+          nx += (tx - nx) * speed;
+          ny += (ty - ny) * speed;
+          naviWrap.style.transform = `translate(${nx}px, ${ny}px)`;
+          if (speed > 0.015) speed *= 0.94; // smooth decay back to calm
+          requestAnimationFrame(tickNavi);
+        };
+        requestAnimationFrame(tickNavi);
+
+        // Click / tap to annoy Navi
+        naviWrap.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          // Dart away wildly
+          const signX = Math.random() < 0.5 ? -1 : 1;
+          tx = signX * (80 + Math.random() * 80); 
+          ty = -60 - Math.random() * 80; // Usually darts upwards and away
+          speed = 0.35; // extremely fast dart
+        });
+      }
 
     })();
   </script>
