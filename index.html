@@ -342,24 +342,35 @@
     #play-header {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 7px 14px;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 12px;
       background: white;
       box-shadow: 0 2px 8px rgba(100, 80, 140, 0.1);
       flex-shrink: 0;
+      flex-wrap: wrap;
     }
 
     #note-stream-wrapper {
       overflow-x: auto;
       overflow-y: hidden;
       -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
       background: linear-gradient(to bottom, #f7f0df, var(--cream));
       flex-shrink: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--lavender) transparent;
     }
 
     #note-stream-wrapper::-webkit-scrollbar {
-      display: none;
+      height: 6px;
+      display: block;
+    }
+    #note-stream-wrapper::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #note-stream-wrapper::-webkit-scrollbar-thumb {
+      background-color: var(--lavender);
+      border-radius: 10px;
     }
 
     #note-stream {
@@ -411,15 +422,20 @@
       color: var(--text-light);
       margin-left: auto;
       white-space: nowrap;
+    }
+
     #btn-sound, #btn-back {
       background: none;
       border: 2px solid var(--lavender);
       border-radius: 8px;
-      padding: 5px 9px;
-      font-size: 1.1rem;
+      padding: 4px 8px;
+      font-size: 0.95rem;
       cursor: pointer;
-      line-height: 1;
+      line-height: 1.2;
       color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     #btn-sound:active, #btn-back:active {
@@ -500,11 +516,10 @@
 
     #kalimba-svg {
       width: 100%;
-      height: 100%;
+      height: auto;
       display: block;
-      max-width: 720px;
+      max-width: 600px;
     }
-
     .tine-rect {
       transition: fill 90ms ease;
     }
@@ -514,71 +529,6 @@
       font-weight: 700;
       fill: #5a4a6a;
       pointer-events: none;
-    }
-
-    /* Controls bar */
-    #controls-bar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 7px 14px;
-      background: white;
-      border-top: 1px solid rgba(200, 184, 232, 0.3);
-      flex-shrink: 0;
-    }
-
-    #btn-back {
-      background: var(--cream);
-      border: 2px solid var(--lavender);
-      border-radius: 8px;
-      padding: 6px 11px;
-      font-family: var(--font);
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: var(--lavender-dark);
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    #btn-back:active {
-      background: var(--lavender);
-      color: white;
-    }
-
-    #pos-slider {
-      flex: 1;
-      -webkit-appearance: none;
-      appearance: none;
-      height: 5px;
-      background: var(--lavender);
-      border-radius: 3px;
-      outline: none;
-      cursor: pointer;
-    }
-
-    #pos-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--lavender-dark);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    #pos-slider::-moz-range-thumb {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: var(--lavender-dark);
-      border: none;
-    }
-
-    #pos-label {
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--text-light);
-      min-width: 48px;
-      text-align: right;
     }
 
     /* ── Complete ────────────────────────────────────── */
@@ -751,7 +701,7 @@
           <polygon class="tri-poly" points="16,28 24,14 32,28" />
         </svg>
       </div>
-      <button id="btn-back" title="2 Schritte zurück">↩</button>
+      <button id="btn-back" title="2 Schritte zurück">-2 🎵</button>
       <span id="part-label">Teil 1</span>
       <span id="score-label">0 / 85</span>
       <button id="btn-sound" title="Ton-Feedback">🔊</button>
