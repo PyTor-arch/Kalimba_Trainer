@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Kalimba ✨ Saria's Song</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --lavender: #c8b8e8;
+      --lavender-dark: #9a80c8;
+      --mint: #b8e8d0;
+      --mint-dark: #68c898;
+      --cream: #fdf6e3;
+      --green: #a8d8a8;
+      --gold: #e8c84a;
+      --gold-dark: #b89818;
+      --error: #f0a0a0;
+      --error-dark: #d06060;
+      --tine-bg: #d4c9b0;
+      --wood: #c8b090;
+      --text: #4a3860;
+      --text-light: #7a6890;
+      --shadow: 0 4px 18px rgba(100, 80, 140, 0.15);
+      --font: 'Nunito', system-ui, -apple-system, sans-serif;
+      --radius: 12px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      height: 100%;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--cream);
+      color: var(--text);
+      height: 100dvh;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* ── Screens ────────────────────────────────────── */
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--cream);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 280ms ease;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .screen.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ── Welcome ────────────────────────────────────── */
+    #screen-welcome {
+      justify-content: center;
+      gap: 20px;
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    .navi-icon {
+      font-size: 3.5rem;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .speech-bubble {
+      background: white;
+      border: 2px solid var(--lavender);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      box-shadow: var(--shadow);
+      max-width: 340px;
+      text-align: left;
+    }
+
+    .speech-bubble h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--lavender-dark);
+      margin-bottom: 6px;
+    }
+
+    .speech-bubble p {
+      font-size: 0.9rem;
+      color: var(--text-light);
+      line-height: 1.55;
+    }
+
+    .mic-note {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      max-width: 300px;
+      opacity: 0.8;
+    }
+
+    /* ── Buttons ────────────────────────────────────── */
+    .btn-primary {
+      background: var(--lavender);
+      color: white;
+      font-family: var(--font);
+      font-size: 1.05rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 50px;
+      padding: 13px 34px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: background 150ms, transform 80ms;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.96);
+      background: var(--lavender-dark);
+    }
+
+    .welcome-btn-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* ── Calibrate ──────────────────────────────────── */
+    #screen-calibrate {
+      justify-content: center;
+      gap: 24px;
+      text-align: center;
+    }
+
+    .calibrate-ring {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 4px solid #e0d4f8;
+      border-top-color: var(--lavender-dark);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    #calibrate-msg {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-light);
+    }
+
+    /* ── Manual Calibration ────────────────────────────────── */
+    #screen-manual-calib {
+      justify-content: center;
+      gap: 18px;
+      padding: 24px 20px;
+      text-align: center;
+    }
+
+    #mcalib-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--lavender-dark);
+    }
+
+    #mcalib-desc {
+      font-size: 0.88rem;
+      color: var(--text-light);
+      max-width: 320px;
+      line-height: 1.55;
+    }
+
+    #mcalib-progress {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    #mcalib-note-name {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--lavender-dark);
+      min-height: 2.8rem;
+      letter-spacing: 0.04em;
+    }
+
+    #mcalib-svg-wrap {
+      width: 100%;
+      max-width: 600px;
+      height: 100px;
+    }
+
+    #mcalib-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    #mcalib-detected {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--mint-dark);
+      min-height: 1.2rem;
+    }
+
+    .mcalib-btn-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .btn-secondary {
+      background: var(--cream);
+      color: var(--lavender-dark);
+      font-family: var(--font);
+      font-size: 0.9rem;
+      font-weight: 700;
+      border: 2px solid var(--lavender);
+      border-radius: 50px;
+      padding: 10px 24px;
+      cursor: pointer;
+      transition: background 150ms, transform 80ms;
+    }
+
+    .btn-secondary:active {
+      background: var(--lavender);
+      color: white;
+      transform: scale(0.96);
+    }
+
+    /* ── Play screen ────────────────────────────────── */
+    #screen-play {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Header */
+    #play-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(100, 80, 140, 0.1);
+      flex-shrink: 0;
+    }
+
+    #triforce-row {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .tri-svg {
+      width: 30px;
+      height: 28px;
+      transition: opacity 200ms;
+    }
+
+    .tri-poly {
+      fill: transparent;
+      stroke: var(--gold-dark);
+      stroke-width: 1.5;
+      stroke-linejoin: round;
+      transition: fill 500ms ease;
+    }
+
+    .tri-svg.filled .tri-poly {
+      fill: var(--gold);
+    }
+
+    #part-label {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #5a3880;
+      background: linear-gradient(135deg, #e8ddff, #d4c8f4);
+      padding: 3px 9px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    #score-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-light);
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    #btn-sound {
+      background: none;
+      border: 2px solid var(--lavender);
+      border-radius: 8px;
+      padding: 5px 9px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    #btn-sound:active {
+      background: var(--lavender);
+    }
+
+    /* Note stream */
+    #note-stream-wrapper {
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      background: linear-gradient(to bottom, #f7f0df, var(--cream));
+      flex-shrink: 0;
+    }
+
+    #note-stream-wrapper::-webkit-scrollbar {
+      display: none;
+    }
+
+    #note-stream {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 50vw;
+      width: max-content;
+      height: 76px;
+    }
+
+    .note-pill {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      border: 2.5px solid var(--lavender);
+      box-shadow: var(--shadow);
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--text);
+      flex-shrink: 0;
+      transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+      line-height: 1.1;
+    }
+
+    .note-pill.done {
+      background: var(--mint);
+      border-color: var(--mint-dark);
+      color: #2a7050;
+      opacity: 0.7;
+      transform: scale(0.9);
+    }
+
+    .note-pill.current {
+      background: var(--lavender);
+      border-color: var(--lavender-dark);
+      color: white;
+      transform: scale(1.22);
+      box-shadow: 0 0 0 4px rgba(200, 184, 232, 0.35), var(--shadow);
+      z-index: 1;
+    }
+
+    .pill-main {
+      font-size: 0.85rem;
+      font-weight: 800;
+    }
+
+    .pill-sub {
+      font-size: 0.63rem;
+      font-weight: 600;
+      opacity: 0.78;
+    }
+
+    .section-div {
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--green), var(--mint));
+      color: #2a5a30;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 5px 9px;
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      white-space: nowrap;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* Kalimba */
+    #kalimba-wrapper {
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 6px 0;
+      overflow: hidden;
+    }
+
+    #kalimba-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      max-width: 720px;
+    }
+
+    .tine-rect {
+      transition: fill 90ms ease;
+    }
+
+    .tine-label {
+      font-family: var(--font);
+      font-weight: 700;
+      fill: #5a4a6a;
+      pointer-events: none;
+    }
+
+    /* Controls bar */
+    #controls-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 14px;
+      background: white;
+      border-top: 1px solid rgba(200, 184, 232, 0.3);
+      flex-shrink: 0;
+    }
+
+    #btn-back {
+      background: var(--cream);
+      border: 2px solid var(--lavender);
+      border-radius: 8px;
+      padding: 6px 11px;
+      font-family: var(--font);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--lavender-dark);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    #btn-back:active {
+      background: var(--lavender);
+      color: white;
+    }
+
+    #pos-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 5px;
+      background: var(--lavender);
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    #pos-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--lavender-dark);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    #pos-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--lavender-dark);
+      border: none;
+    }
+
+    #pos-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-light);
+      min-width: 48px;
+      text-align: right;
+    }
+
+    /* ── Complete ────────────────────────────────────── */
+    #screen-complete {
+      background: linear-gradient(160deg, #fdf6e3 0%, #f0e8ff 100%);
+      justify-content: center;
+      gap: 18px;
+      padding: 32px 24px;
+      text-align: center;
+    }
+
+    .big-star {
+      font-size: 3.5rem;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .complete-tris {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+    }
+
+    .complete-tri {
+      width: 56px;
+      height: 52px;
+    }
+
+    .complete-tri .tri-poly {
+      fill: var(--gold);
+      stroke: var(--gold-dark);
+      stroke-width: 1.5;
+      stroke-linejoin: round;
+    }
+
+    #screen-complete h1 {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: var(--lavender-dark);
+      line-height: 1.2;
+    }
+
+    #screen-complete p {
+      font-size: 0.95rem;
+      color: var(--text-light);
+      line-height: 1.6;
+      max-width: 280px;
+    }
+
+    /* ── Error overlay ───────────────────────────────── */
+    #err-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(253, 246, 227, 0.96);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 32px;
+      text-align: center;
+    }
+
+    #err-overlay.show {
+      display: flex;
+    }
+
+    #err-overlay h2 {
+      color: var(--error-dark);
+      font-size: 1.2rem;
+    }
+
+    #err-overlay p {
+      color: var(--text-light);
+      font-size: 0.88rem;
+      line-height: 1.55;
+      max-width: 300px;
+    }
+
+    /* ── Debug ───────────────────────────────────────── */
+    #debug-hud {
+      display: none;
+      position: fixed;
+      top: 6px;
+      right: 10px;
+      z-index: 300;
+      background: rgba(0, 0, 0, 0.65);
+      color: #0f0;
+      font: 11px/1.4 monospace;
+      padding: 4px 8px;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    #debug-hud.show {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══ Screen 1: Welcome ═══════════════════════════════ -->
+  <div id="screen-welcome" class="screen active">
+    <div class="navi-icon">✨</div>
+    <div class="speech-bubble">
+      <h1>Hey! Listen, Sina!</h1>
+      <p>Ich bin Navi, deine Kalimba-Fee! 🧚<br>
+        Lass uns zusammen <strong>Saria's Song</strong> lernen —<br>
+        das schönste Lied aus den Wäldern von Hyrule.</p>
+    </div>
+    <div class="speech-bubble">
+      <p>🎵 Die leuchtende Taste zeigt, welche Note du spielen sollst.<br>
+        Spiel sie auf deiner Kalimba — ich höre zu!<br>
+        Das Lied hat <strong>4 Teile</strong> und du sammelst dabei alle drei Triforce-Splitter. 💛</p>
+    </div>
+    <button class="btn-primary" id="btn-start">🎤 Mikrofon aktivieren &amp; starten</button>
+    <button class="btn-secondary" id="btn-manual-calib">🎹 Tasten kalibrieren</button>
+    <p class="mic-note">Das Mikrofon wird nur lokal genutzt. Nichts wird aufgezeichnet.</p>
+  </div>
+
+  <!-- ══ Screen 2: Calibrate ════════════════════════════ -->
+  <div id="screen-calibrate" class="screen">
+    <div class="calibrate-ring"></div>
+    <p id="calibrate-msg">Kalibrierung läuft… 🎵</p>
+  </div>
+
+  <!-- ══ Screen 2b: Manual Calibration ═════════════════════════ -->
+  <div id="screen-manual-calib" class="screen">
+    <div id="mcalib-title">🎹 Kalimba kalibrieren</div>
+    <p id="mcalib-desc">Drücke alle Tasten von <strong>links nach rechts</strong>.<br>Ich lerne dabei die genauen
+      Frequenzen deiner Kalimba!</p>
+    <div id="mcalib-progress">Taste 1 von 17</div>
+    <div id="mcalib-note-name">E3</div>
+    <div id="mcalib-svg-wrap">
+      <svg id="mcalib-svg" viewBox="0 0 600 100" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+    <div id="mcalib-detected"></div>
+    <div class="mcalib-btn-row">
+      <button class="btn-primary" id="btn-mcalib-next" disabled>✅ Bestätigen</button>
+      <button class="btn-secondary" id="btn-mcalib-skip-tine">⏩ Überspringen</button>
+      <button class="btn-secondary" id="btn-mcalib-abort">❌ Abbrechen</button>
+    </div>
+  </div>
+
+  <!-- ══ Screen 3: Play ════════════════════════════════ -->
+  <div id="screen-play" class="screen">
+
+    <div id="play-header">
+      <div id="triforce-row">
+        <svg class="tri-svg" id="tri-0" viewBox="0 0 32 28">
+          <polygon class="tri-poly" points="16,0 8,14 24,14" />
+          <polygon class="tri-poly" points="0,28 8,14 16,28" />
+          <polygon class="tri-poly" points="16,28 24,14 32,28" />
+        </svg>
+        <svg class="tri-svg" id="tri-1" viewBox="0 0 32 28">
+          <polygon class="tri-poly" points="16,0 8,14 24,14" />
+          <polygon class="tri-poly" points="0,28 8,14 16,28" />
+          <polygon class="tri-poly" points="16,28 24,14 32,28" />
+        </svg>
+        <svg class="tri-svg" id="tri-2" viewBox="0 0 32 28">
+          <polygon class="tri-poly" points="16,0 8,14 24,14" />
+          <polygon class="tri-poly" points="0,28 8,14 16,28" />
+          <polygon class="tri-poly" points="16,28 24,14 32,28" />
+        </svg>
+      </div>
+      <span id="part-label">Teil 1</span>
+      <span id="score-label">0 / 85</span>
+      <button id="btn-sound" title="Ton-Feedback">🔊</button>
+    </div>
+
+    <div id="note-stream-wrapper">
+      <div id="note-stream"><!-- filled by JS --></div>
+    </div>
+
+    <div id="kalimba-wrapper">
+      <svg id="kalimba-svg" viewBox="0 0 720 268" preserveAspectRatio="xMidYMid meet">
+        <!-- filled by JS -->
+      </svg>
+    </div>
+
+    <div id="controls-bar">
+      <button id="btn-back">↩ −2</button>
+      <input type="range" id="pos-slider" min="0" max="84" value="0" step="1">
+      <span id="pos-label">1 / 85</span>
+    </div>
+
+  </div>
+
+  <!-- ══ Screen 4: Complete ════════════════════════════ -->
+  <div id="screen-complete" class="screen">
+    <div class="big-star">🌟</div>
+    <div class="complete-tris">
+      <svg class="complete-tri" viewBox="0 0 32 28">
+        <polygon class="tri-poly" points="16,0 8,14 24,14" />
+        <polygon class="tri-poly" points="0,28 8,14 16,28" />
+        <polygon class="tri-poly" points="16,28 24,14 32,28" />
+      </svg>
+      <svg class="complete-tri" viewBox="0 0 32 28">
+        <polygon class="tri-poly" points="16,0 8,14 24,14" />
+        <polygon class="tri-poly" points="0,28 8,14 16,28" />
+        <polygon class="tri-poly" points="16,28 24,14 32,28" />
+      </svg>
+      <svg class="complete-tri" viewBox="0 0 32 28">
+        <polygon class="tri-poly" points="16,0 8,14 24,14" />
+        <polygon class="tri-poly" points="0,28 8,14 16,28" />
+        <polygon class="tri-poly" points="16,28 24,14 32,28" />
+      </svg>
+    </div>
+    <h1>Geschafft, Sina! 🎉</h1>
+    <p>Du hast Saria's Song gespielt!<br>
+      Die Wälder von Hyrule tanzen für dich. 🌿<br>
+      Alle drei Triforce-Splitter gesammelt! 💛</p>
+    <button class="btn-primary" id="btn-restart">✨ Nochmal spielen</button>
+  </div>
+
+  <!-- ══ Error overlay ════════════════════════════════ -->
+  <div id="err-overlay">
+    <div style="font-size:2.5rem">🎤</div>
+    <h2>Mikrofon nicht verfügbar</h2>
+    <p>Bitte erlaube den Mikrofonzugriff:<br>
+      <strong>Einstellungen → Safari → Mikrofon → Erlauben</strong><br>
+      Dann die Seite neu laden.
+    </p>
+    <button class="btn-primary" onclick="location.reload()">🔄 Neu laden</button>
+  </div>
+
+  <!-- ══ Debug HUD (activate via URL #debug) ══════════ -->
+  <div id="debug-hud">
+    <span id="dbg-freq">— Hz</span> → <span id="dbg-note">—</span>
+    | floor: <span id="dbg-floor">—</span>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // ─── Easy-to-change config ───────────────────────────────────────────────
+      const PLAYER_NAME = 'Sina';  // ← change name here
+      const FREQ_TOLERANCE = 20;      // ±Hz for note match (very wide, handles uncalibrated play)
+      const N_STABLE = 1;       // frames needed before triggering (was 2)
+      const CALIB_MS = 1800;    // noise-floor calibration duration in ms
+      const TONE_DUR = 0.30;    // feedback tone duration (was 0.45)
+      const COOLDOWN_MS = 160;     // ms to ignore detector after correct note
+      const ECHO_SUPPRESS_MS = 280;     // ms to suppress same-note echo
+      const MIN_FREQ = 130;     // lowest detectable frequency (Hz) (E3 is 164.8)
+      const MAX_FREQ = 870;     // highest detectable frequency (Hz)
+      const YIN_THRESHOLD = 0.18;    // YIN CMND threshold (was 0.15, 0.18 is very tolerant of noise)
+      const IS_LOW_END = (navigator.hardwareConcurrency || 4) <= 2;
+      const FFT_SIZE = IS_LOW_END ? 2048 : 4096;
+
+      // ─── 17 Kalimba tines: E3 → G5 (ascending left→right) ──────────────────
+      const TINES = [
+        { n: 'E3', f: 164.81 }, { n: 'F3', f: 174.61 }, { n: 'G3', f: 196.00 }, { n: 'A3', f: 220.00 },
+        { n: 'B3', f: 246.94 }, { n: 'C4', f: 261.63 }, { n: 'D4', f: 293.66 }, { n: 'E4', f: 329.63 },
+        { n: 'F4', f: 349.23 }, { n: 'G4', f: 392.00 }, { n: 'A4', f: 440.00 }, { n: 'B4', f: 493.88 },
+        { n: 'C5', f: 523.25 }, { n: 'D5', f: 587.33 }, { n: 'E5', f: 659.25 }, { n: 'F5', f: 698.46 },
+        { n: 'G5', f: 783.99 },
+      ];
+      // Arc-shaped heights: peak at index 8 (F4, the main note of Saria's Song)
+      const TINE_H = [100, 112, 124, 136, 148, 160, 172, 184, 190, 184, 172, 160, 148, 136, 124, 112, 100];
+
+      // ─── Song data ───────────────────────────────────────────────────────────
+      // n = note name, f = frequency
+      // c = chord note (lower), cf = chord note frequency
+      // Chord: both tines light up; either frequency accepted for detection
+      const SONG = [
+        // ── Teil 1 (0–19) ──────────────────────────────────────────────────────
+        { n: 'F4', f: 349.23 }, { n: 'A4', f: 440.00 }, { n: 'B4', f: 493.88 },
+        { n: 'F4', f: 349.23 }, { n: 'A4', f: 440.00 }, { n: 'B4', f: 493.88 },
+        { n: 'F4', f: 349.23 }, { n: 'A4', f: 440.00 }, { n: 'B4', f: 493.88 },
+        { n: 'E5', f: 659.25 }, { n: 'D5', f: 587.33 }, { n: 'B4', f: 493.88 }, { n: 'C5', f: 523.25 },
+        { n: 'B4', f: 493.88 }, { n: 'G4', f: 392.00 }, { n: 'E4', f: 329.63 }, { n: 'D4', f: 293.66 },
+        { n: 'E4', f: 329.63 }, { n: 'G4', f: 392.00 }, { n: 'E4', f: 329.63 },
+        // ── Teil 2 (20–39) ─────────────────────────────────────────────────────
+        { n: 'F4', f: 349.23 }, { n: 'A4', f: 440.00 }, { n: 'B4', f: 493.88 },
+        { n: 'F4', f: 349.23 }, { n: 'A4', f: 440.00 }, { n: 'B4', f: 493.88 },
+        { n: 'F4', f: 349.23 }, { n: 'A4', f: 440.00 }, { n: 'B4', f: 493.88 },
+        { n: 'E5', f: 659.25 }, { n: 'D5', f: 587.33 }, { n: 'B4', f: 493.88 }, { n: 'C5', f: 523.25 },
+        { n: 'E5', f: 659.25 }, { n: 'C5', f: 523.25 }, { n: 'G4', f: 392.00 }, { n: 'B4', f: 493.88 },
+        { n: 'G4', f: 392.00 }, { n: 'D4', f: 293.66 }, { n: 'E4', f: 329.63 },
+        // ── Teil 3 – single notes (40–48) ─────────────────────────────────────
+        { n: 'D4', f: 293.66 }, { n: 'E4', f: 329.63 }, { n: 'F4', f: 349.23 },
+        { n: 'G4', f: 392.00 }, { n: 'A4', f: 440.00 }, { n: 'B4', f: 493.88 },
+        { n: 'C5', f: 523.25 }, { n: 'B4', f: 493.88 }, { n: 'E4', f: 329.63 },
+        // ── Teil 3 – chords (49–57) ────────────────────────────────────────────
+        { n: 'F4', f: 349.23, c: 'D4', cf: 293.66 },
+        { n: 'G4', f: 392.00, c: 'E4', cf: 329.63 },
+        { n: 'A4', f: 440.00, c: 'F4', cf: 349.23 },
+        { n: 'B4', f: 493.88, c: 'G4', cf: 392.00 },
+        { n: 'C5', f: 523.25, c: 'A4', cf: 440.00 },
+        { n: 'D5', f: 587.33, c: 'B4', cf: 493.88 },
+        { n: 'E5', f: 659.25, c: 'C5', cf: 523.25 },
+        { n: 'F5', f: 698.46, c: 'D5', cf: 587.33 },
+        { n: 'G5', f: 783.99, c: 'E5', cf: 659.25 },
+        // ── Teil 4 (58–84) ─────────────────────────────────────────────────────
+        { n: 'D4', f: 293.66 }, { n: 'E4', f: 329.63 }, { n: 'F4', f: 349.23 },
+        { n: 'G4', f: 392.00 }, { n: 'A4', f: 440.00 }, { n: 'B4', f: 493.88 },
+        { n: 'C5', f: 523.25 }, { n: 'B4', f: 493.88 }, { n: 'E4', f: 329.63 },
+        { n: 'E4', f: 329.63 }, { n: 'D4', f: 293.66 }, { n: 'F4', f: 349.23 }, { n: 'E4', f: 329.63 },
+        { n: 'G4', f: 392.00 }, { n: 'F4', f: 349.23 }, { n: 'A4', f: 440.00 }, { n: 'G4', f: 392.00 },
+        { n: 'B4', f: 493.88 }, { n: 'A4', f: 440.00 }, { n: 'C5', f: 523.25 }, { n: 'B4', f: 493.88 },
+        { n: 'D5', f: 587.33 }, { n: 'C5', f: 523.25 }, { n: 'E5', f: 659.25 }, { n: 'F5', f: 698.46 },
+        { n: 'D5', f: 587.33 }, { n: 'E5', f: 659.25 },
+      ];
+      const TOTAL = SONG.length;  // 85
+      const PART_STARTS = [0, 20, 40, 58];
+      const PART_ENDS = [19, 39, 57, 84];
+      const PART_NAMES = ['Teil 1', 'Teil 2', 'Teil 3', 'Teil 4'];
+
+      // ─── AudioEngine ─────────────────────────────────────────────────────────
+      const AE = {
+        ctx: null,
+        analyser: null,
+        stream: null,
+        isBlocked: false,
+
+        async init() {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AC();
+          if (this.ctx.state === 'suspended') await this.ctx.resume();
+
+          // iOS Safari: these constraints prevent audio ducking / VoIP mode
+          this.stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: false,
+              autoGainControl: false,
+              noiseSuppression: false,
+              channelCount: 1,
+            },
+            video: false,
+          });
+
+          const src = this.ctx.createMediaStreamSource(this.stream);
+          this.analyser = this.ctx.createAnalyser();
+          this.analyser.fftSize = FFT_SIZE;
+          this.analyser.smoothingTimeConstant = 0; // raw samples for YIN
+          src.connect(this.analyser);
+          // Note: NOT connected to destination — silent monitoring
+        },
+
+        buf() {
+          const b = new Float32Array(this.analyser.fftSize);
+          this.analyser.getFloatTimeDomainData(b);
+          return b;
+        },
+
+        // Marimba-like feedback tone: fundamental + 2nd harmonic, exponential decay
+        playTone(freq, onDone) {
+          if (!this.ctx) return;
+          this.isBlocked = true;
+          const t = this.ctx.currentTime;
+          const o1 = this.ctx.createOscillator();
+          const o2 = this.ctx.createOscillator();
+          const g1 = this.ctx.createGain();
+          const g2 = this.ctx.createGain();
+          const out = this.ctx.createGain();
+
+          o1.type = 'sine'; o1.frequency.value = freq;
+          o2.type = 'sine'; o2.frequency.value = freq * 2;
+
+          g1.gain.setValueAtTime(0.44, t);
+          g1.gain.exponentialRampToValueAtTime(0.0001, t + TONE_DUR);
+          g2.gain.setValueAtTime(0.17, t);
+          g2.gain.exponentialRampToValueAtTime(0.0001, t + TONE_DUR * 0.6);
+          out.gain.setValueAtTime(0.85, t);
+
+          o1.connect(g1); o2.connect(g2);
+          g1.connect(out); g2.connect(out);
+          out.connect(this.ctx.destination);
+
+          o1.start(t); o2.start(t);
+          o1.stop(t + TONE_DUR + 0.05);
+          o2.stop(t + TONE_DUR + 0.05);
+
+          o1.onended = () => {
+            try { out.disconnect(); } catch (_) { }
+            this.isBlocked = false;
+            if (onDone) onDone();
+          };
+        },
+
+        resume() {
+          if (this.ctx && this.ctx.state !== 'running') {
+            this.ctx.resume().catch(() => { });
+          }
+        },
+      };
+
+      // ─── PitchDetector (YIN autocorrelation) ─────────────────────────────────
+      const PD = {
+        noiseFloor: 0.008,
+        lastDetectedFreq: null,
+        lastDetectedAt: 0,
+        noiseBoostUntil: 0,   // adaptive noise-floor boost after correct note
+
+        // Correct H2/H3 overtones back to fundamental, or H1/2 sub-harmonics
+        harmonicCorrect(freq) {
+          // If freq/2 is closer to a known tine than freq itself → take fundamental
+          const half = freq / 2;
+          const third = freq / 3;
+          const dbl = freq * 2;
+          let bestFreq = freq;
+          let bestDist = Infinity;
+          for (const t of TINES) {
+            const d = Math.abs(freq - t.f);
+            if (d < bestDist) { bestDist = d; bestFreq = freq; }
+          }
+          // Check half
+          let halfDist = Infinity;
+          for (const t of TINES) { const d = Math.abs(half - t.f); if (d < halfDist) halfDist = d; }
+          // Check third
+          let thirdDist = Infinity;
+          for (const t of TINES) { const d = Math.abs(third - t.f); if (d < thirdDist) thirdDist = d; }
+          // Check double
+          let dblDist = Infinity;
+          for (const t of TINES) { const d = Math.abs(dbl - t.f); if (d < dblDist) dblDist = d; }
+
+          // If the half or third is much closer to a tine → it is the fundamental
+          const margin = 45; // Hz margin advantage needed (very strict to avoid false corrections)
+          if (halfDist + margin < bestDist && halfDist < 30) return half;
+          if (thirdDist + margin < bestDist && thirdDist < 30) return third;
+          // sub-harmonic: double is a known note and current is very close to half of it
+          if (dblDist < 30 && dbl >= MIN_FREQ && dbl <= MAX_FREQ && dblDist + margin < bestDist) return dbl;
+          return freq;
+        },
+
+        detect(rawBuf, sr) {
+          const N = rawBuf.length;
+          const half = N >> 1;
+
+          // 1. DC offset removal + RMS check
+          let sum = 0;
+          for (let i = 0; i < N; i++) sum += rawBuf[i];
+          const mean = sum / N;
+
+          let rms = 0;
+          for (let i = 0; i < N; i++) {
+            const v = rawBuf[i] - mean;
+            rms += v * v;
+          }
+          rms = Math.sqrt(rms / N);
+          if (rms < this.noiseFloor) return null;
+
+          // Zero-mean buffer
+          const b = new Float32Array(N);
+          for (let i = 0; i < N; i++) b[i] = rawBuf[i] - mean;
+
+          // 2. YIN difference function  d[τ] = Σ(b[j] - b[j+τ])²
+          const d = new Float32Array(half);
+          for (let tau = 1; tau < half; tau++) {
+            for (let j = 0; j < half; j++) {
+              const diff = b[j] - b[j + tau];
+              d[tau] += diff * diff;
+            }
+          }
+
+          // 3. Cumulative mean normalized difference (CMND)
+          const cmnd = new Float32Array(half);
+          cmnd[0] = 1;
+          let runSum = 0;
+          for (let tau = 1; tau < half; tau++) {
+            runSum += d[tau];
+            cmnd[tau] = runSum === 0 ? 0 : (d[tau] * tau) / runSum;
+          }
+
+          // 4. Find first tau below threshold (walk to local minimum)
+          let tau = 2;
+          while (tau < half - 1) {
+            if (cmnd[tau] < YIN_THRESHOLD) {
+              while (tau + 1 < half - 1 && cmnd[tau + 1] < cmnd[tau]) tau++;
+              break;
+            }
+            tau++;
+          }
+          if (tau >= half - 1) return null;
+
+          // 5. Parabolic interpolation for sub-sample accuracy
+          const s0 = cmnd[tau - 1], s1 = cmnd[tau], s2 = cmnd[tau + 1];
+          const denom = 2 * (2 * s1 - s2 - s0);
+          const betterTau = denom === 0 ? tau : tau - (s2 - s0) / denom;
+
+          let freq = sr / betterTau;
+          if (freq < MIN_FREQ || freq > MAX_FREQ) return null;
+
+          // Harmonic correction (remove overtones / sub-harmonics)
+          freq = this.harmonicCorrect(freq);
+          if (freq < MIN_FREQ || freq > MAX_FREQ) return null;
+
+          // Echo suppression: same note ringing out → ignore
+          const now = performance.now();
+          const effectiveFloor = (now < this.noiseBoostUntil)
+            ? this.noiseFloor * 1.3
+            : this.noiseFloor;
+          if (rms < effectiveFloor) return null; // re-check after boost
+
+          this.lastDetectedFreq = freq;
+          this.lastDetectedAt = now;
+          return freq;
+        },
+
+        // Measure noise floor over durationMs
+        async calibrate(durationMs) {
+          const start = performance.now();
+          const peaks = [];
+          return new Promise(resolve => {
+            const tick = () => {
+              const raw = AE.buf();
+              const N = raw.length;
+              let s = 0;
+              for (let i = 0; i < N; i++) s += raw[i];
+              const m = s / N;
+              let rms = 0;
+              for (let i = 0; i < N; i++) { const v = raw[i] - m; rms += v * v; }
+              peaks.push(Math.sqrt(rms / N));
+              if (performance.now() - start < durationMs) {
+                requestAnimationFrame(tick);
+              } else {
+                this.noiseFloor = Math.max(0.006, Math.max(...peaks) * 2.5);
+                resolve();
+              }
+            };
+            requestAnimationFrame(tick);
+          });
+        },
+
+        // Called after a correct note to temporarily suppress its echo
+        boostAfterCorrect(isNextSame) {
+          // If the next note is the exact same one, we don't want the current ringout 
+          // to immediately cross the threshold. We boost the floor a bit longer/higher.
+          const ms = isNextSame ? 350 : 180;
+          this.noiseBoostUntil = performance.now() + ms;
+          this.lastDetectedFreq = null; // reset echo tracker so next note isn't suppressed
+        },
+
+        // Returns the closest TINE name for a frequency
+        closestTineName(freq) {
+          let best = null, bestDiff = Infinity;
+          for (const t of TINES) {
+            const d = Math.abs(freq - t.f);
+            if (d < bestDiff) { bestDiff = d; best = t.n; }
+          }
+          return best;
+        },
+      };
+
+      // ─── SongSequencer ───────────────────────────────────────────────────────
+      const SEQ = {
+        pos: 0,
+        correctCount: 0,
+
+        get entry() { return SONG[this.pos]; },
+
+        advance() {
+          if (this.pos < TOTAL - 1) { this.pos++; return true; }
+          return false;
+        },
+
+        goBack(steps) {
+          this.pos = Math.max(0, this.pos - (steps || 2));
+        },
+
+        seekTo(i) {
+          this.pos = Math.max(0, Math.min(TOTAL - 1, i));
+        },
+
+        // Returns 'correct' | 'wrong' | 'silence'
+        evaluate(freq) {
+          if (freq === null) return 'silence';
+          const e = this.entry;
+          const freqs = e.c ? [{ n: e.n, f: e.f }, { n: e.c, f: e.cf }] : [{ n: e.n, f: e.f }];
+          for (const t of freqs) {
+            const isCalibrated = (MC.calibrated[t.n] !== undefined);
+            const tol = isCalibrated ? 8 : FREQ_TOLERANCE; // strict 8Hz tolerance for calibrated tines
+            if (Math.abs(freq - t.f) <= tol) {
+              this.correctCount++;
+              return 'correct';
+            }
+          }
+          return 'wrong';
+        },
+
+        currentPartIdx() {
+          for (let i = PART_STARTS.length - 1; i >= 0; i--) {
+            if (this.pos >= PART_STARTS[i]) return i;
+          }
+          return 0;
+        },
+
+        reset() { this.pos = 0; this.correctCount = 0; },
+      };
+
+      // ─── KalimbaRenderer ─────────────────────────────────────────────────────
+      const KR = {
+        rects: {},   // note name → SVGRectElement
+        errorActive: false,
+        errorTimer: null,
+
+        init() {
+          const svg = document.getElementById('kalimba-svg');
+          const VW = 720;
+          const TOP = 10;   // y where wood body starts
+          const TINE_W = 22;
+          const spacing = VW / (TINES.length + 1); // ≈40px
+
+          const ns = 'http://www.w3.org/2000/svg';
+          const mk = tag => document.createElementNS(ns, tag);
+
+          // Wood body (bridge)
+          const body = mk('rect');
+          body.setAttribute('x', '10');
+          body.setAttribute('y', String(TOP));
+          body.setAttribute('width', String(VW - 20));
+          body.setAttribute('height', '24');
+          body.setAttribute('rx', '8');
+          body.setAttribute('fill', '#c8b090');
+          svg.appendChild(body);
+
+          // Decorative dots on wood body
+          for (let i = 0; i < 3; i++) {
+            const dot = mk('circle');
+            dot.setAttribute('cx', String(VW / 2 - 16 + i * 16));
+            dot.setAttribute('cy', String(TOP + 12));
+            dot.setAttribute('r', '3.5');
+            dot.setAttribute('fill', '#a89070');
+            svg.appendChild(dot);
+          }
+
+          // 17 tines
+          TINES.forEach((tine, i) => {
+            const cx = Math.round(spacing * (i + 1));
+            const h = TINE_H[i];
+            const y = TOP + 10;  // tines start inside the wood bridge and point DOWN
+
+            const g = mk('g');
+            g.dataset.note = tine.n;
+
+            const rect = mk('rect');
+            rect.setAttribute('x', String(cx - TINE_W / 2));
+            rect.setAttribute('y', String(y));
+            rect.setAttribute('width', String(TINE_W));
+            rect.setAttribute('height', String(h));
+            rect.setAttribute('rx', '5');
+            rect.setAttribute('fill', '#d4c9b0');
+            rect.classList.add('tine-rect');
+
+            const label = mk('text');
+            label.setAttribute('x', String(cx));
+            label.setAttribute('y', String(y + h + 18)); // labels at the tip of the tine
+            label.setAttribute('text-anchor', 'middle');
+            label.setAttribute('font-size', '10');
+            label.classList.add('tine-label');
+            label.textContent = tine.n;
+
+            g.appendChild(rect);
+            g.appendChild(label);
+            svg.appendChild(g);
+            this.rects[tine.n] = rect;
+          });
+        },
+
+        // Highlight the current target note(s)
+        setTarget(entry) {
+          if (this.errorActive) return;
+          Object.values(this.rects).forEach(r => r.setAttribute('fill', '#d4c9b0'));
+          const notes = entry.c ? [entry.n, entry.c] : [entry.n];
+          notes.forEach(n => {
+            if (this.rects[n]) this.rects[n].setAttribute('fill', '#c8b8e8');
+          });
+        },
+
+        // Brief mint flash on correct note
+        flashCorrect(entry) {
+          const notes = entry.c ? [entry.n, entry.c] : [entry.n];
+          notes.forEach(n => {
+            if (this.rects[n]) this.rects[n].setAttribute('fill', '#b8e8d0');
+          });
+          setTimeout(() => {
+            if (!this.errorActive) {
+              notes.forEach(n => {
+                if (this.rects[n]) this.rects[n].setAttribute('fill', '#d4c9b0');
+              });
+            }
+          }, 360);
+        },
+
+        // Brief red flash on all tines for wrong note
+        flashError() {
+          if (this.errorActive) return;
+          this.errorActive = true;
+          Object.values(this.rects).forEach(r => r.setAttribute('fill', '#f0a0a0'));
+          clearTimeout(this.errorTimer);
+          this.errorTimer = setTimeout(() => {
+            this.errorActive = false;
+            this.setTarget(SEQ.entry);
+          }, 320);
+        },
+
+        resetAll() {
+          this.errorActive = false;
+          clearTimeout(this.errorTimer);
+          Object.values(this.rects).forEach(r => r.setAttribute('fill', '#d4c9b0'));
+        },
+      };
+
+      // ─── ManualCalibrator ─────────────────────────────────────────────────────
+      const MC = {
+        tineIdx: 0,
+        calibrated: {},   // note name → measured Hz
+        svgRects: {},
+        raf: null,
+        currentDetectedHz: null,
+
+        _buildSVG() {
+          const svg = document.getElementById('mcalib-svg');
+          svg.innerHTML = '';
+          const ns = 'http://www.w3.org/2000/svg';
+          const mk = t => document.createElementNS(ns, t);
+          const VW = 600;
+          const spacing = VW / (TINES.length + 1);
+          const TINE_W = 18;
+
+          const body = mk('rect');
+          body.setAttribute('x', '5'); body.setAttribute('y', '2'); // Bridge at top
+          body.setAttribute('width', String(VW - 10)); body.setAttribute('height', '18');
+          body.setAttribute('rx', '5'); body.setAttribute('fill', '#c8b090');
+          svg.appendChild(body);
+
+          this.svgRects = {};
+          TINES.forEach((tine, i) => {
+            const cx = Math.round(spacing * (i + 1));
+            const h = 40 + (TINE_H[i] / 190) * 45; // slightly longer to fit viewBox
+            const y = 8; // Tines start at bridge and go down
+            const rect = mk('rect');
+            rect.setAttribute('x', String(cx - TINE_W / 2));
+            rect.setAttribute('y', String(y));
+            rect.setAttribute('width', String(TINE_W));
+            rect.setAttribute('height', String(h));
+            rect.setAttribute('rx', '4');
+            rect.setAttribute('fill', '#d4c9b0');
+            svg.appendChild(rect);
+            this.svgRects[tine.n] = rect;
+          });
+        },
+
+        _highlight(idx) {
+          Object.values(this.svgRects).forEach(r => r.setAttribute('fill', '#d4c9b0'));
+          if (idx < TINES.length) {
+            this.svgRects[TINES[idx].n].setAttribute('fill', '#c8b8e8');
+          }
+        },
+
+        _setProgress() {
+          const i = this.tineIdx;
+          document.getElementById('mcalib-progress').textContent =
+            i < TINES.length ? `Taste ${i + 1} von ${TINES.length}` : 'Fertig! \u2728';
+          document.getElementById('mcalib-note-name').textContent =
+            i < TINES.length ? TINES[i].n : '';
+        },
+
+        _stopLoop() {
+          if (this.raf) { cancelAnimationFrame(this.raf); this.raf = null; }
+        },
+
+        _startTineLoop() {
+          this._stopLoop();
+          this.currentDetectedHz = null;
+          document.getElementById('btn-mcalib-next').disabled = true;
+          const target = TINES[this.tineIdx];
+
+          const tick = () => {
+            this.raf = requestAnimationFrame(tick);
+            // Reset echo suppressor briefly so each new press is detected
+            PD.lastDetectedFreq = null;
+            const raw = AE.buf();
+            const freq = PD.detect(raw, AE.ctx.sampleRate);
+
+            if (freq !== null) {
+              const diff = Math.abs(freq - target.f);
+              if (diff <= 40) {
+                this.currentDetectedHz = freq;
+                document.getElementById('btn-mcalib-next').disabled = false;
+                document.getElementById('mcalib-detected').textContent =
+                  `Empfangen: ${freq.toFixed(1)} Hz (Drücke Bestätigen)`;
+              } else {
+                // Hint for totally wrong note
+                document.getElementById('mcalib-detected').textContent =
+                  `Falsche Taste? (${freq.toFixed(1)} Hz)`;
+              }
+            } else if (!this.currentDetectedHz) {
+              document.getElementById('mcalib-detected').textContent = '';
+            }
+          };
+          this.raf = requestAnimationFrame(tick);
+        },
+
+        _nextTine() {
+          if (this.tineIdx >= TINES.length) { this._finish(); return; }
+          this._setProgress();
+          this._highlight(this.tineIdx);
+          this._startTineLoop();
+        },
+
+        _finish() {
+          this._stopLoop();
+          for (const [name, hz] of Object.entries(this.calibrated)) {
+            const tine = TINES.find(t => t.n === name);
+            if (tine) tine.f = hz;
+            for (const note of SONG) {
+              if (note.n === name) note.f = hz;
+              if (note.c === name) note.cf = hz;
+            }
+          }
+          const count = Object.keys(this.calibrated).length;
+          document.getElementById('mcalib-progress').textContent =
+            `${count} von ${TINES.length} Tasten kalibriert \u2728`;
+          document.getElementById('mcalib-note-name').textContent = '';
+          document.getElementById('mcalib-detected').textContent = '';
+          setTimeout(() => {
+            SEQ.reset();
+            UI._show('screen-play');
+            UI._syncUI();
+            UI._startLoop();
+          }, 1200);
+        },
+
+        start() {
+          this.tineIdx = 0;
+          this.calibrated = {};
+          this._buildSVG();
+          this._setProgress();
+          this._highlight(0);
+          document.getElementById('mcalib-detected').textContent = '';
+          UI._show('screen-manual-calib');
+
+          document.getElementById('btn-mcalib-next').onclick = () => {
+            if (!this.currentDetectedHz) return;
+            const target = TINES[this.tineIdx];
+            this.calibrated[target.n] = this.currentDetectedHz;
+            this.svgRects[target.n].setAttribute('fill', '#b8e8d0');
+
+            // Show success briefly
+            document.getElementById('mcalib-detected').textContent =
+              `\u2705 Gespeichert: ${this.currentDetectedHz.toFixed(1)} Hz`;
+
+            this._stopLoop();
+            this.tineIdx++;
+            setTimeout(() => this._nextTine(), 400);
+          };
+
+          document.getElementById('btn-mcalib-skip-tine').onclick = () => {
+            this._stopLoop();
+            this.tineIdx++;
+            this._nextTine();
+          };
+          document.getElementById('btn-mcalib-abort').onclick = () => {
+            this._stopLoop();
+            UI._show('screen-welcome');
+          };
+          this._startTineLoop();
+        },
+      };
+
+      // ─── UIController ────────────────────────────────────────────────────────
+      const UI = {
+        soundOn: true,
+        raf: null,
+        stableNote: null,
+        stableCount: 0,
+        frame: 0,
+
+        init() {
+          // Activate debug HUD if URL contains #debug
+          if (location.hash === '#debug') {
+            document.getElementById('debug-hud').classList.add('show');
+          }
+
+          KR.init();
+          this._buildStream();
+          this._attachEvents();
+          this._show('screen-welcome');
+
+          // iOS: restore AudioContext after app backgrounding
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') AE.resume();
+          });
+
+          // Prevent page-level touch scroll while playing
+          document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+        },
+
+        _buildStream() {
+          const container = document.getElementById('note-stream');
+          SONG.forEach((entry, i) => {
+            // Section divider before each part
+            const pIdx = PART_STARTS.indexOf(i);
+            if (pIdx !== -1) {
+              const div = document.createElement('div');
+              div.className = 'section-div';
+              div.textContent = PART_NAMES[pIdx];
+              container.appendChild(div);
+            }
+
+            const pill = document.createElement('div');
+            pill.id = `pill-${i}`;
+            pill.className = entry.c ? 'note-pill' : 'note-pill';
+
+            if (entry.c) {
+              const top = document.createElement('span');
+              top.className = 'pill-main';
+              top.textContent = entry.n;
+              const bot = document.createElement('span');
+              bot.className = 'pill-sub';
+              bot.textContent = entry.c;
+              pill.appendChild(top);
+              pill.appendChild(bot);
+            } else {
+              pill.textContent = entry.n;
+            }
+            container.appendChild(pill);
+          });
+        },
+
+        _attachEvents() {
+          document.getElementById('btn-start').addEventListener('click', async () => {
+            this._show('screen-calibrate');
+            try {
+              await AE.init();
+              await PD.calibrate(CALIB_MS);
+              document.getElementById('calibrate-msg').textContent = 'Bereit! ✨';
+              document.getElementById('dbg-floor').textContent = PD.noiseFloor.toFixed(4);
+              await this._delay(550);
+              SEQ.reset();
+              this._show('screen-play');
+              this._syncUI();
+              this._startLoop();
+            } catch (err) {
+              console.error('Mic error:', err);
+              document.getElementById('err-overlay').classList.add('show');
+              this._show('screen-welcome');
+            }
+          });
+
+          document.getElementById('btn-manual-calib').addEventListener('click', async () => {
+            try {
+              if (!AE.ctx) {
+                this._show('screen-calibrate');
+                document.getElementById('calibrate-msg').textContent = 'Mikrofon aktivieren…';
+                await AE.init();
+                await PD.calibrate(CALIB_MS);
+                document.getElementById('calibrate-msg').textContent = 'Bereit! ✨';
+                await this._delay(400);
+                AE.resume();
+              }
+              MC.start();
+            } catch (err) {
+              console.error('Mic error:', err);
+              document.getElementById('err-overlay').classList.add('show');
+              this._show('screen-welcome');
+            }
+          });
+
+          document.getElementById('btn-back').addEventListener('click', () => {
+            SEQ.goBack(2);
+            this.stableNote = null; this.stableCount = 0;
+            KR.resetAll();
+            this._syncUI();
+          });
+
+          document.getElementById('pos-slider').addEventListener('input', e => {
+            SEQ.seekTo(+e.target.value);
+            this.stableNote = null; this.stableCount = 0;
+            KR.resetAll();
+            this._syncUI();
+          });
+
+          document.getElementById('btn-sound').addEventListener('click', () => {
+            this.soundOn = !this.soundOn;
+            document.getElementById('btn-sound').textContent = this.soundOn ? '🔊' : '🔇';
+          });
+
+          document.getElementById('btn-restart').addEventListener('click', () => {
+            SEQ.reset();
+            [0, 1, 2].forEach(i => document.getElementById(`tri-${i}`).classList.remove('filled'));
+            KR.resetAll();
+            this._show('screen-play');
+            this._syncUI();
+            this._startLoop();
+          });
+        },
+
+        _startLoop() {
+          if (this.raf) cancelAnimationFrame(this.raf);
+          this.stableNote = null;
+          this.stableCount = 0;
+          this.frame = 0;
+          this.cooldownUntil = 0;   // timestamp: detector paused until then
+          this.lastCorrectNote = null;
+          this.lastCorrectTime = 0;
+
+          const tick = () => {
+            this.raf = requestAnimationFrame(tick);
+            AE.resume();
+
+            // Timestamp-based cooldown (replaces AE.isBlocked)
+            if (Date.now() < this.cooldownUntil) return;
+
+            // On low-end devices: skip every other frame
+            this.frame++;
+            if (IS_LOW_END && (this.frame & 1)) return;
+
+            const raw = AE.buf();
+            const freq = PD.detect(raw, AE.ctx.sampleRate);
+
+            // Debug HUD
+            const hud = document.getElementById('debug-hud');
+            if (hud.classList.contains('show')) {
+              document.getElementById('dbg-freq').textContent =
+                freq ? freq.toFixed(1) + ' Hz' : '— Hz';
+              document.getElementById('dbg-note').textContent =
+                freq ? PD.closestTineName(freq) : '—';
+            }
+
+            // Debounce: need N_STABLE consecutive frames with same note
+            const detected = freq ? PD.closestTineName(freq) : null;
+            if (detected === this.stableNote) {
+              this.stableCount++;
+            } else {
+              this.stableNote = detected;
+              this.stableCount = 1;
+            }
+            if (this.stableCount < N_STABLE) return;
+
+            // Evaluate against current target
+            const result = SEQ.evaluate(freq);
+
+            if (result === 'correct') {
+              const entry = SEQ.entry;   // snapshot before advance
+              const posNow = SEQ.pos;
+
+              this.stableNote = null;
+              this.stableCount = 0;
+
+              this.lastCorrectNote = detected;
+              this.lastCorrectTime = Date.now();
+
+              // Adaptive cooldown: if the VERY NEXT note in the song is the exact same tine,
+              // we need a longer cooldown so the current note's ringout doesn't instantly trigger the next one.
+              const nextEntry = (posNow + 1 < TOTAL) ? SONG[posNow + 1] : null;
+              const isNextSame = nextEntry && (nextEntry.n === entry.n);
+              // 400ms if same note is next, 150ms if different note is next
+              this.cooldownUntil = Date.now() + (isNextSame ? 420 : 150);
+              PD.boostAfterCorrect(isNextSame); // suppress echo of this note
+
+              KR.flashCorrect(entry);
+
+              const proceed = () => {
+                // Triforce fill at part completion
+                const pIdx = PART_ENDS.indexOf(posNow);
+                if (pIdx === 0) document.getElementById('tri-0').classList.add('filled');
+                if (pIdx === 1) document.getElementById('tri-1').classList.add('filled');
+                if (pIdx === 3) document.getElementById('tri-2').classList.add('filled');
+
+                const cont = SEQ.advance();
+                if (!cont) {
+                  // All notes complete
+                  cancelAnimationFrame(this.raf);
+                  [0, 1, 2].forEach(i => document.getElementById(`tri-${i}`).classList.add('filled'));
+                  this._syncUI();
+                  setTimeout(() => this._show('screen-complete'), 900);
+                  return false;
+                }
+                this._syncUI();
+                return true;
+              };
+
+              if (this.soundOn) {
+                // Play tone but keep the loop running (no cancelAnimationFrame)
+                AE.playTone(entry.f);
+                proceed(); // advance immediately; tone plays concurrently
+              } else {
+                proceed();
+              }
+
+            } else if (result === 'wrong') {
+              // If the "wrong" note is actually just the acoustic ringout of the note we literally just played, ignore it.
+              if (detected === this.lastCorrectNote && (Date.now() - this.lastCorrectTime < 600)) {
+                // Ignore ringout
+              } else {
+                KR.flashError();
+              }
+              this.stableNote = null;
+              this.stableCount = 0;
+            }
+          };
+
+          this.raf = requestAnimationFrame(tick);
+        },
+
+        _syncUI() {
+          const pos = SEQ.pos;
+
+          // Update all pills
+          for (let i = 0; i < TOTAL; i++) {
+            const pill = document.getElementById(`pill-${i}`);
+            if (!pill) continue;
+            pill.classList.remove('current', 'done');
+            if (i === pos) pill.classList.add('current');
+            else if (i < pos) pill.classList.add('done');
+          }
+
+          // Scroll current pill into center view
+          const pill = document.getElementById(`pill-${pos}`);
+          const wrapper = document.getElementById('note-stream-wrapper');
+          if (pill && wrapper) {
+            wrapper.scrollTo({
+              left: pill.offsetLeft - wrapper.clientWidth / 2 + pill.offsetWidth / 2,
+              behavior: 'smooth',
+            });
+          }
+
+          // Kalimba target highlight
+          KR.setTarget(SEQ.entry);
+
+          // Controls
+          document.getElementById('pos-slider').value = pos;
+          document.getElementById('pos-label').textContent = `${pos + 1} / ${TOTAL}`;
+          document.getElementById('score-label').textContent =
+            `${SEQ.correctCount} / ${TOTAL}`;
+          document.getElementById('part-label').textContent =
+            PART_NAMES[SEQ.currentPartIdx()];
+        },
+
+        _show(id) {
+          document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+          document.getElementById(id).classList.add('active');
+        },
+
+        _delay(ms) { return new Promise(r => setTimeout(r, ms)); },
+      };
+
+      // ─── Boot ─────────────────────────────────────────────────────────────────
+      UI.init();
+
+    })();
+  </script>
+</body>
+
+</html>
