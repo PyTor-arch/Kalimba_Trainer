@@ -342,11 +342,33 @@
     #play-header {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
       padding: 7px 14px;
       background: white;
       box-shadow: 0 2px 8px rgba(100, 80, 140, 0.1);
       flex-shrink: 0;
+    }
+
+    #note-stream-wrapper {
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      background: linear-gradient(to bottom, #f7f0df, var(--cream));
+      flex-shrink: 0;
+    }
+
+    #note-stream-wrapper::-webkit-scrollbar {
+      display: none;
+    }
+
+    #note-stream {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 50vw;
+      width: max-content;
+      height: 76px;
     }
 
     #triforce-row {
@@ -389,9 +411,7 @@
       color: var(--text-light);
       margin-left: auto;
       white-space: nowrap;
-    }
-
-    #btn-sound {
+    #btn-sound, #btn-back {
       background: none;
       border: 2px solid var(--lavender);
       border-radius: 8px;
@@ -399,36 +419,15 @@
       font-size: 1.1rem;
       cursor: pointer;
       line-height: 1;
+      color: var(--text);
     }
 
-    #btn-sound:active {
+    #btn-sound:active, #btn-back:active {
       background: var(--lavender);
     }
 
-    /* Note stream */
-    #note-stream-wrapper {
-      overflow-x: auto;
-      overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      background: linear-gradient(to bottom, #f7f0df, var(--cream));
-      flex-shrink: 0;
-    }
-
-    #note-stream-wrapper::-webkit-scrollbar {
-      display: none;
-    }
-
-    #note-stream {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 10px 50vw;
-      width: max-content;
-      height: 76px;
-    }
-
     .note-pill {
+      cursor: pointer;
       width: 50px;
       height: 50px;
       border-radius: 50%;
@@ -732,7 +731,7 @@
   </div>
 
   <!-- ══ Screen 3: Play ════════════════════════════════ -->
-  <div id="screen-play" class="screen">
+    <div id="screen-play" class="screen">
 
     <div id="play-header">
       <div id="triforce-row">
@@ -752,6 +751,7 @@
           <polygon class="tri-poly" points="16,28 24,14 32,28" />
         </svg>
       </div>
+      <button id="btn-back" title="2 Schritte zurück">↩</button>
       <span id="part-label">Teil 1</span>
       <span id="score-label">0 / 85</span>
       <button id="btn-sound" title="Ton-Feedback">🔊</button>
@@ -765,12 +765,6 @@
       <svg id="kalimba-svg" viewBox="0 0 720 268" preserveAspectRatio="xMidYMid meet">
         <!-- filled by JS -->
       </svg>
-    </div>
-
-    <div id="controls-bar">
-      <button id="btn-back">↩ −2</button>
-      <input type="range" id="pos-slider" min="0" max="84" value="0" step="1">
-      <span id="pos-label">1 / 85</span>
     </div>
 
   </div>
@@ -1546,10 +1540,17 @@
             } else {
               pill.textContent = entry.n;
             }
-            container.appendChild(pill);
-          });
-        },
 
+            pill.onclick = () => {
+              SEQ.seekTo(i);
+              this.stableNote = null; this.stableCount = 0;
+              KR.resetAll();
+              this._syncUI();
+            };
+
+            container.appendChild(pill);
+            });
+            },
         _attachEvents() {
           document.getElementById('btn-start').addEventListener('click', async () => {
             this._show('screen-calibrate');
@@ -1591,13 +1592,6 @@
 
           document.getElementById('btn-back').addEventListener('click', () => {
             SEQ.goBack(2);
-            this.stableNote = null; this.stableCount = 0;
-            KR.resetAll();
-            this._syncUI();
-          });
-
-          document.getElementById('pos-slider').addEventListener('input', e => {
-            SEQ.seekTo(+e.target.value);
             this.stableNote = null; this.stableCount = 0;
             KR.resetAll();
             this._syncUI();
@@ -1757,11 +1751,8 @@
           KR.setTarget(SEQ.entry);
 
           // Controls
-          document.getElementById('pos-slider').value = pos;
-          document.getElementById('pos-label').textContent = `${pos + 1} / ${TOTAL}`;
           document.getElementById('score-label').textContent =
-            `${SEQ.correctCount} / ${TOTAL}`;
-          document.getElementById('part-label').textContent =
+            `${SEQ.correctCount} / ${TOTAL}`;          document.getElementById('part-label').textContent =
             PART_NAMES[SEQ.currentPartIdx()];
         },
 
