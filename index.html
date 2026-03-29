@@ -833,9 +833,10 @@
       const ECHO_SUPPRESS_MS = 280;     // ms to suppress same-note echo
       const MIN_FREQ = 130;     // lowest detectable frequency (Hz) (E3 is 164.8)
       const MAX_FREQ = 870;     // highest detectable frequency (Hz)
-      const YIN_THRESHOLD = 0.18;    // YIN CMND threshold (was 0.15, 0.18 is very tolerant of noise)
       const IS_LOW_END = (navigator.hardwareConcurrency || 4) <= 2;
-      const FFT_SIZE = (IS_LOW_END || /iPhone|iPad|iPod/.test(navigator.userAgent)) ? 2048 : 4096;
+      const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+      const FFT_SIZE = (IS_LOW_END || IS_IOS) ? 2048 : 4096;
+      const YIN_THRESHOLD = IS_IOS ? 0.25 : 0.18; // iOS needs more tolerance for noisy mic pre-amps
       // ─── 17 Kalimba tines: E3 → G5 (ascending left→right) ──────────────────
       const TINES = [
         { n: 'E3', f: 164.81 }, { n: 'F3', f: 174.61 }, { n: 'G3', f: 196.00 }, { n: 'A3', f: 220.00 },
@@ -1110,7 +1111,7 @@
           // Echo suppression: same note ringing out → ignore
           const now = performance.now();
           const effectiveFloor = (now < this.noiseBoostUntil)
-            ? this.noiseFloor * 1.3
+            ? this.noiseFloor * 1.15
             : this.noiseFloor;
           if (rms < effectiveFloor) return null; // re-check after boost
 
@@ -1137,7 +1138,7 @@
               if (performance.now() - start < durationMs) {
                 requestAnimationFrame(tick);
               } else {
-                this.noiseFloor = Math.max(0.006, Math.max(...peaks) * 1.8);
+                this.noiseFloor = Math.max(IS_IOS ? 0.002 : 0.005, Math.max(...peaks) * 1.5);
                 resolve();
               }
             };
@@ -1149,7 +1150,7 @@
         boostAfterCorrect(isNextSame) {
           // If the next note is the exact same one, we don't want the current ringout 
           // to immediately cross the threshold. We boost the floor a bit longer/higher.
-          const ms = isNextSame ? 350 : 180;
+          const ms = isNextSame ? 280 : 140;
           this.noiseBoostUntil = performance.now() + ms;
           this.lastDetectedFreq = null; // reset echo tracker so next note isn't suppressed
         },
@@ -1192,7 +1193,7 @@
           const freqs = e.c ? [{ n: e.n, f: e.f }, { n: e.c, f: e.cf }] : [{ n: e.n, f: e.f }];
           for (const t of freqs) {
             const isCalibrated = (MC.calibrated[t.n] !== undefined);
-            const tol = isCalibrated ? 12 : FREQ_TOLERANCE; // 12Hz tolerance for calibrated tines (was 8)
+            const tol = isCalibrated ? (IS_IOS ? 12 : 8) : FREQ_TOLERANCE;
             if (Math.abs(freq - t.f) <= tol) {
               this.correctCount++;
               return 'correct';
@@ -1394,7 +1395,7 @@
             AE.resume();
 
             this.frame = (this.frame || 0) + 1;
-            if (this.frame % 2 !== 0) return;
+            if ((IS_IOS || IS_LOW_END) && (this.frame % 2 !== 0)) return;
 
             // Reset echo suppressor briefly so each new press is detected
             PD.lastDetectedFreq = null;
@@ -1638,9 +1639,9 @@
             // Timestamp-based cooldown (replaces AE.isBlocked)
             if (Date.now() < this.cooldownUntil) return;
 
-            // Limit to 30fps to avoid overheating/throttling on mobile
+            // Limit to 30fps on mobile/low-end to avoid overheating/throttling
             this.frame++;
-            if (this.frame % 2 !== 0) return;
+            if ((IS_IOS || IS_LOW_END) && (this.frame % 2 !== 0)) return;
 
             const raw = AE.buf();
             const freq = PD.detect(raw, AE.ctx.sampleRate);
