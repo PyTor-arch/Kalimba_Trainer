@@ -100,17 +100,15 @@
 
     .bg-triforce {
       position: absolute;
-      width: 130vw;
-      max-width: 650px;
+      width: 120vw;
+      max-width: 600px;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      fill: rgba(232, 200, 74, 0.04);
-      stroke: rgba(232, 200, 74, 0.2);
-      stroke-width: 1.5;
+      opacity: 0.15;
       z-index: 1;
       pointer-events: none;
-      filter: drop-shadow(0 0 30px rgba(232, 200, 74, 0.1));
+      filter: drop-shadow(0 0 30px rgba(232, 200, 74, 0.15));
     }
 
     .navi-img {
@@ -688,14 +686,10 @@
   <div id="screen-welcome" class="screen active">
     
     <!-- Background Triforce -->
-    <svg class="bg-triforce" viewBox="0 0 100 86.6">
-      <polygon points="50,0 25,43.3 75,43.3" />
-      <polygon points="25,43.3 0,86.6 50,86.6" />
-      <polygon points="75,43.3 50,86.6 100,86.6" />
-    </svg>
+    <img src="triforce.png" class="bg-triforce" alt="Triforce">
 
     <div id="navi-wrap">
-      <img src="Navi.png" class="navi-img" alt="Navi">
+      <img src="Navi.png?v=2" class="navi-img" alt="Navi">
     </div>
     <div class="speech-bubble zelda-box">
       <h1>Hey! Listen, Sina!</h1>
@@ -914,7 +908,6 @@
           this.ctx = new AC();
           if (this.ctx.state === 'suspended') await this.ctx.resume();
 
-          // iOS Safari: these constraints prevent audio ducking / VoIP mode
           this.stream = await navigator.mediaDevices.getUserMedia({
             audio: {
               echoCancellation: false,
@@ -925,13 +918,28 @@
             video: false,
           });
 
+          // iOS Safari Fix 1: The microphone permission dialog pauses the entire Web Audio API. 
+          // We MUST resume it again after the user clicks "Allow".
+          if (this.ctx.state === 'suspended') {
+            await this.ctx.resume();
+          }
+
+          // iOS Safari Fix 2: "Unlock" the Web Audio engine by playing a tiny, silent sound.
+          const unlockOsc = this.ctx.createOscillator();
+          const unlockGain = this.ctx.createGain();
+          unlockGain.gain.value = 0;
+          unlockOsc.connect(unlockGain);
+          unlockGain.connect(this.ctx.destination);
+          unlockOsc.start(this.ctx.currentTime);
+          unlockOsc.stop(this.ctx.currentTime + 0.1);
+
           const src = this.ctx.createMediaStreamSource(this.stream);
           this.analyser = this.ctx.createAnalyser();
           this.analyser.fftSize = FFT_SIZE;
           this.analyser.smoothingTimeConstant = 0; // raw samples for YIN
           src.connect(this.analyser);
           
-          // iOS Safari Fix: If the audio graph doesn't reach the destination,
+          // iOS Safari Fix 3: If the audio graph doesn't reach the destination,
           // iOS aggressively suspends the microphone to save battery.
           // A silent GainNode forces the audio engine to keep processing.
           const dummy = this.ctx.createGain();
