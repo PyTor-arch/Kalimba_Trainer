@@ -770,11 +770,9 @@
       // ─── Easy-to-change config ───────────────────────────────────────────────
       const PLAYER_NAME = 'Sina';  // ← change name here
       const FREQ_TOLERANCE = 15;      // ±Hz for note match (uncalibrated play)
-      const N_STABLE = 1;       // frames needed before triggering (was 2)
+      const N_STABLE = 2;       // consecutive frames needed before triggering (prevents single-frame glitches)
       const CALIB_MS = 1800;    // noise-floor calibration duration in ms
       const TONE_DUR = 0.30;    // feedback tone duration (was 0.45)
-      const COOLDOWN_MS = 160;     // ms to ignore detector after correct note
-      const ECHO_SUPPRESS_MS = 280;     // ms to suppress same-note echo
       const MIN_FREQ = 200;     // lowest detectable frequency (Hz) (C4 is 261.6)
       const MAX_FREQ = 1400;    // highest detectable frequency (Hz) (E6 is 1318.5)
       const IS_LOW_END = (navigator.hardwareConcurrency || 4) <= 2;
@@ -967,11 +965,10 @@
           const half = freq / 2;
           const third = freq / 3;
           const dbl = freq * 2;
-          let bestFreq = freq;
           let bestDist = Infinity;
           for (const t of TINES) {
             const d = Math.abs(freq - t.f);
-            if (d < bestDist) { bestDist = d; bestFreq = freq; }
+            if (d < bestDist) bestDist = d;
           }
           // Check half
           let halfDist = Infinity;
@@ -984,7 +981,7 @@
           for (const t of TINES) { const d = Math.abs(dbl - t.f); if (d < dblDist) dblDist = d; }
 
           // If the half or third is much closer to a tine → it is the fundamental
-          const margin = 45; // Hz margin advantage needed (very strict to avoid false corrections)
+          const margin = 60; // Hz margin advantage needed (increased for C-Dur layout with octave-related tines)
           if (halfDist + margin < bestDist && halfDist < 30) return half;
           if (thirdDist + margin < bestDist && thirdDist < 30) return third;
           // sub-harmonic: double is a known note and current is very close to half of it
@@ -1576,8 +1573,6 @@
           this.stableCount = 0;
           this.frame = 0;
           this.cooldownUntil = 0;   // timestamp: detector paused until then
-          this.lastCorrectNote = null;
-          this.lastCorrectTime = 0;
           this.prevRMS = 0;         // previous frame RMS for onset detection
           this.lastOnsetAt = 0;     // timestamp of last detected onset (0 = no onset yet)
 
@@ -1586,7 +1581,7 @@
             AE.resume();
 
             // Timestamp-based cooldown (replaces AE.isBlocked)
-            if (Date.now() < this.cooldownUntil) return;
+            if (performance.now() < this.cooldownUntil) return;
 
             // Limit to 30fps on mobile/low-end to avoid overheating/throttling
             this.frame++;
@@ -1598,7 +1593,7 @@
             // ── Onset-Erkennung: RMS-Spike = neue Taste angeschlagen ─────────────
             const curRMS = PD.lastRMS;
             const isNewOnset = curRMS > this.prevRMS * 1.8 && curRMS > PD.noiseFloor * 2.5;
-            if (isNewOnset) this.lastOnsetAt = Date.now();
+            if (isNewOnset) this.lastOnsetAt = performance.now();
             this.prevRMS = curRMS;
 
             // Debug HUD
@@ -1631,15 +1626,12 @@
               this.stableCount = 0;
               this.lastOnsetAt = 0;     // Sustain darf kein Rot auslösen bis neue Taste
 
-              this.lastCorrectNote = detected;
-              this.lastCorrectTime = Date.now();
-
               // Adaptive cooldown: if the VERY NEXT note in the song is the exact same tine,
               // we need a longer cooldown so the current note's ringout doesn't instantly trigger the next one.
               const nextEntry = (posNow + 1 < TOTAL) ? SONG[posNow + 1] : null;
               const isNextSame = nextEntry && (nextEntry.n === entry.n);
               // 400ms if same note is next, 150ms if different note is next
-              this.cooldownUntil = Date.now() + (isNextSame ? 420 : 150);
+              this.cooldownUntil = performance.now() + (isNextSame ? 420 : 150);
               PD.boostAfterCorrect(isNextSame); // suppress echo of this note
 
               KR.flashCorrect(entry);
@@ -1674,7 +1666,7 @@
 
             } else if (result === 'wrong') {
               // Rot nur bei echtem neuen Anschlag (Onset), nicht bei Sustain/Nachhall
-              const withinOnset = (Date.now() - this.lastOnsetAt) < 350;
+              const withinOnset = (performance.now() - this.lastOnsetAt) < 350;
               if (withinOnset) KR.flashError();
               this.stableNote = null;
               this.stableCount = 0;
