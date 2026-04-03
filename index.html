@@ -769,27 +769,28 @@
 
       // ─── Easy-to-change config ───────────────────────────────────────────────
       const PLAYER_NAME = 'Sina';  // ← change name here
-      const FREQ_TOLERANCE = 20;      // ±Hz for note match (very wide, handles uncalibrated play)
+      const FREQ_TOLERANCE = 15;      // ±Hz for note match (uncalibrated play)
       const N_STABLE = 1;       // frames needed before triggering (was 2)
       const CALIB_MS = 1800;    // noise-floor calibration duration in ms
       const TONE_DUR = 0.30;    // feedback tone duration (was 0.45)
       const COOLDOWN_MS = 160;     // ms to ignore detector after correct note
       const ECHO_SUPPRESS_MS = 280;     // ms to suppress same-note echo
-      const MIN_FREQ = 130;     // lowest detectable frequency (Hz) (E3 is 164.8)
-      const MAX_FREQ = 870;     // highest detectable frequency (Hz)
+      const MIN_FREQ = 200;     // lowest detectable frequency (Hz) (C4 is 261.6)
+      const MAX_FREQ = 1400;    // highest detectable frequency (Hz) (E6 is 1318.5)
       const IS_LOW_END = (navigator.hardwareConcurrency || 4) <= 2;
       const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
       const FFT_SIZE = (IS_LOW_END || IS_IOS) ? 2048 : 4096;
       const YIN_THRESHOLD = IS_IOS ? 0.25 : 0.18; // iOS needs more tolerance for noisy mic pre-amps
-      // ─── 17 Kalimba tines: E3 → G5 (ascending left→right) ──────────────────
+      // ─── 17 Kalimba tines: Standard C-Dur (D6 links → C4 Mitte → E6 rechts) ──
       const TINES = [
-        { n: 'E3', f: 164.81 }, { n: 'F3', f: 174.61 }, { n: 'G3', f: 196.00 }, { n: 'A3', f: 220.00 },
-        { n: 'B3', f: 246.94 }, { n: 'C4', f: 261.63 }, { n: 'D4', f: 293.66 }, { n: 'E4', f: 329.63 },
-        { n: 'F4', f: 349.23 }, { n: 'G4', f: 392.00 }, { n: 'A4', f: 440.00 }, { n: 'B4', f: 493.88 },
-        { n: 'C5', f: 523.25 }, { n: 'D5', f: 587.33 }, { n: 'E5', f: 659.25 }, { n: 'F5', f: 698.46 },
-        { n: 'G5', f: 783.99 },
+        { n: 'D6', f: 1174.66 }, { n: 'B5', f: 987.77 },  { n: 'G5', f: 783.99 },
+        { n: 'E5', f: 659.25 },  { n: 'C5', f: 523.25 },  { n: 'A4', f: 440.00 },
+        { n: 'F4', f: 349.23 },  { n: 'D4', f: 293.66 },  { n: 'C4', f: 261.63 },
+        { n: 'E4', f: 329.63 },  { n: 'G4', f: 392.00 },  { n: 'B4', f: 493.88 },
+        { n: 'D5', f: 587.33 },  { n: 'F5', f: 698.46 },  { n: 'A5', f: 880.00 },
+        { n: 'C6', f: 1046.50 }, { n: 'E6', f: 1318.51 },
       ];
-      // Arc-shaped heights: peak at index 8 (F4, the main note of Saria's Song)
+      // Arc-shaped heights: peak at index 8 (C4, tiefste/mittlere Taste)
       const TINE_H = [100, 112, 124, 136, 148, 160, 172, 184, 190, 184, 172, 160, 148, 136, 124, 112, 100];
 
       // ─── Song data ───────────────────────────────────────────────────────────
@@ -958,6 +959,7 @@
         lastDetectedFreq: null,
         lastDetectedAt: 0,
         noiseBoostUntil: 0,   // adaptive noise-floor boost after correct note
+        lastRMS: 0,           // exposed for onset detection in tick()
 
         // Correct H2/H3 overtones back to fundamental, or H1/2 sub-harmonics
         harmonicCorrect(freq) {
@@ -1005,6 +1007,7 @@
             rms += v * v;
           }
           rms = Math.sqrt(rms / N);
+          this.lastRMS = rms;           // expose for onset detection in tick()
           if (rms < this.noiseFloor) return null;
 
           // Zero-mean buffer
@@ -1137,7 +1140,7 @@
           const freqs = e.c ? [{ n: e.n, f: e.f }, { n: e.c, f: e.cf }] : [{ n: e.n, f: e.f }];
           for (const t of freqs) {
             const isCalibrated = (MC.calibrated[t.n] !== undefined);
-            const tol = isCalibrated ? (IS_IOS ? 12 : 8) : FREQ_TOLERANCE;
+            const tol = isCalibrated ? 5 : FREQ_TOLERANCE;
             if (Math.abs(freq - t.f) <= tol) {
               this.correctCount++;
               return 'correct';
@@ -1575,6 +1578,8 @@
           this.cooldownUntil = 0;   // timestamp: detector paused until then
           this.lastCorrectNote = null;
           this.lastCorrectTime = 0;
+          this.prevRMS = 0;         // previous frame RMS for onset detection
+          this.lastOnsetAt = 0;     // timestamp of last detected onset (0 = no onset yet)
 
           const tick = () => {
             this.raf = requestAnimationFrame(tick);
@@ -1589,6 +1594,12 @@
 
             const raw = AE.buf();
             const freq = PD.detect(raw, AE.ctx.sampleRate);
+
+            // ── Onset-Erkennung: RMS-Spike = neue Taste angeschlagen ─────────────
+            const curRMS = PD.lastRMS;
+            const isNewOnset = curRMS > this.prevRMS * 1.8 && curRMS > PD.noiseFloor * 2.5;
+            if (isNewOnset) this.lastOnsetAt = Date.now();
+            this.prevRMS = curRMS;
 
             // Debug HUD
             const hud = document.getElementById('debug-hud');
@@ -1618,6 +1629,7 @@
 
               this.stableNote = null;
               this.stableCount = 0;
+              this.lastOnsetAt = 0;     // Sustain darf kein Rot auslösen bis neue Taste
 
               this.lastCorrectNote = detected;
               this.lastCorrectTime = Date.now();
@@ -1661,12 +1673,9 @@
               }
 
             } else if (result === 'wrong') {
-              // If the "wrong" note is actually just the acoustic ringout of the note we literally just played, ignore it.
-              if (detected === this.lastCorrectNote && (Date.now() - this.lastCorrectTime < 600)) {
-                // Ignore ringout
-              } else {
-                KR.flashError();
-              }
+              // Rot nur bei echtem neuen Anschlag (Onset), nicht bei Sustain/Nachhall
+              const withinOnset = (Date.now() - this.lastOnsetAt) < 350;
+              if (withinOnset) KR.flashError();
               this.stableNote = null;
               this.stableCount = 0;
             }
