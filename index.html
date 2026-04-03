@@ -769,16 +769,16 @@
 
       // ─── Easy-to-change config ───────────────────────────────────────────────
       const PLAYER_NAME = 'Sina';  // ← change name here
+      const IS_LOW_END = (navigator.hardwareConcurrency || 4) <= 2;
+      const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
       const FREQ_TOLERANCE = 15;      // ±Hz for note match (uncalibrated play)
-      const N_STABLE = 2;       // consecutive frames needed before triggering (prevents single-frame glitches)
+      const N_STABLE = IS_IOS ? 1 : 2; // iOS: 1 Frame reicht (30fps, kurze Tines zerfallen schnell)
       const CALIB_MS = 1800;    // noise-floor calibration duration in ms
       const TONE_DUR = 0.30;    // feedback tone duration (was 0.45)
       const MIN_FREQ = 200;     // lowest detectable frequency (Hz) (C4 is 261.6)
       const MAX_FREQ = 1400;    // highest detectable frequency (Hz) (E6 is 1318.5)
-      const IS_LOW_END = (navigator.hardwareConcurrency || 4) <= 2;
-      const IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
       const FFT_SIZE = (IS_LOW_END || IS_IOS) ? 2048 : 4096;
-      const YIN_THRESHOLD = IS_IOS ? 0.25 : 0.18; // iOS needs more tolerance for noisy mic pre-amps
+      const YIN_THRESHOLD = IS_IOS ? 0.28 : 0.18; // iOS: toleranter (Hochpass-Filterung des iPhone-Mics)
       // ─── 17 Kalimba tines: Standard C-Dur (D6 links → C4 Mitte → E6 rechts) ──
       const TINES = [
         { n: 'D6', f: 1174.66 }, { n: 'B5', f: 987.77 },  { n: 'G5', f: 783.99 },
@@ -1082,7 +1082,7 @@
               if (performance.now() - start < durationMs) {
                 requestAnimationFrame(tick);
               } else {
-                this.noiseFloor = Math.max(IS_IOS ? 0.002 : 0.005, Math.max(...peaks) * 1.5);
+                this.noiseFloor = Math.max(IS_IOS ? 0.002 : 0.005, Math.max(...peaks) * (IS_IOS ? 1.25 : 1.5));
                 resolve();
               }
             };
